@@ -14,7 +14,7 @@
 #include "compat-api.h"
 
 #include <xengnttab.h>
-#include "../../xf86-qubes-common/include/xf86-qubes-common.h"
+#include "../../xf86-vanir-common/include/xf86-vanir-common.h"
 
 #define DUMMY_MAX_SCREENS 16
 
@@ -82,7 +82,7 @@ typedef struct dummyRec
     int interlace;
     dummy_colors colors[256];
     pointer* FBBase;
-    struct xf86_qubes_pixmap *FBBasePriv;
+    struct xf86_vanir_pixmap *FBBasePriv;
     Bool        (*CreateWindow)() ;     /* wrapped CreateWindow */
     Bool prop;
 
