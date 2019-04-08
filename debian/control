@@ -1,0 +1,102 @@
+Source: vanir-gui-agent
+Section: admin
+Priority: extra
+Maintainer: Cybertrigo
+Build-Depends:
+    libpam0g-dev,
+    libpulse-dev,
+    libtool,
+    automake,
+    xserver-xorg-dev,
+    xutils-dev,
+    libvchan-xen-dev,
+    libx11-dev,
+    libxcomposite-dev,
+    libxdamage-dev,
+    x11proto-xf86dga-dev,
+    libxt-dev,
+    libxen-dev,
+    quilt,
+    debhelper (>= 8.0.0),
+    vanir-gui-common (>= 4.1.0),
+    vanirdb-dev,
+    dh-systemd (>= 1.5),
+    libltdl-dev
+Standards-Version: 3.9.8
+Homepage: http://www.vos.org/
+#Vcs-Git: git://git.debian.org/collab-maint/vanir-gui-agent.git
+#Vcs-Browser: http://git.debian.org/?p=collab-maint/vanir-gui-agent.git;a=summary
+
+Package: vanir-gui-agent
+Architecture: any
+Depends:
+    xserver-xorg-core,
+    xinit,
+    x11-xserver-utils,
+    vanir-core-agent (>= 3.0.14),
+    vanirdb-vm,
+    libxdamage1,
+    libxcomposite1,
+    libxt6,
+    libx11-6,
+    python3,
+    python3-xcffib,
+    xserver-xorg-video-dummyqbs (= ${binary:Version}),
+    xserver-xorg-input-vanir (= ${binary:Version}),
+    ${shlibs:Depends},
+    ${misc:Depends}
+Recommends: qt4-qtconfig, pulseaudio-vanir
+Provides: x-display-manager
+Description: Makes X11 windows available to vanir dom0
+ The Vanir GUI agent allows the forwarding of running app windows to the
+ vanir dom0. It also includes various extras such as copy/paste support.
+
+Package: xserver-xorg-vanir-common
+Architecture: any
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends}
+Description: Common functions for vanir xserver driver
+ Shared library which contains common functions of the Vanir xserver drivers.
+
+Package: xserver-xorg-video-dummyqbs
+Architecture: any
+Depends:
+ ${xviddriver:Depends},
+ ${shlibs:Depends},
+ ${misc:Depends},
+ xserver-xorg-vanir-common (= ${binary:Version})
+Provides:
+ ${xviddriver:Provides}
+Replaces: vanir-gui-agent (<< 3.2.11-1)
+Breaks: vanir-gui-agent (<< 3.2.11-1)
+Description: Dummy X video driver for vanir-gui-agent
+ Dummy X video driver for Vanir VM, with XRandr support.
+
+Package: xserver-xorg-input-vanir
+Architecture: any
+Depends:
+ ${xinpdriver:Depends},
+ ${shlibs:Depends},
+ ${misc:Depends},
+ xserver-xorg-vanir-common (= ${binary:Version})
+Provides:
+ ${xinpdriver:Provides}
+Replaces: vanir-gui-agent (<< 3.2.11-1)
+Breaks: vanir-gui-agent (<< 3.2.11-1)
+Description: X input driver for injecting events from vanir-gui-agent
+ This driver inject input events delivered through vanir-gui-agent.
+ Additionally it helps retrieving composition buffers of windows.
+
+Package: pulseaudio-vanir
+Architecture: any
+Depends:
+    pulseaudio,
+    libpulse0,
+    ${shlibs:Depends},
+    ${pulse:Depends},
+    ${misc:Depends}
+Replaces: vanir-gui-agent (<< 1.0.0-1)
+Breaks: vanir-gui-agent (<< 1.0.0-1)
+Description: Audio support for Vanir VM
+ Pulseaudio module to enable sound support in Vanir VM

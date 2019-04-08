@@ -1,0 +1,88 @@
+pkgname=(vanir-vm-gui vanir-vm-pulseaudio)
+pkgver=`cat version`
+pkgrel=9
+epoch=
+pkgdesc="The Vanir GUI Agent for AppVMs"
+arch=("x86_64")
+url="http://vos.org/"
+license=('GPL')
+groups=()
+makedepends=(pkg-config make gcc patch git automake autoconf libtool
+			pulseaudio
+			xorg-server-devel xorg-util-macros xf86dgaproto libxcomposite libxt pixman
+			vanir-vm-gui-common vanir-libvchan-xen vanir-db-vm
+			)
+checkdepends=()
+optdepends=()
+provides=()
+conflicts=()
+replaces=()
+backup=()
+options=()
+changelog=
+
+source=(PKGBUILD-z-vanir-session.sh)
+
+noextract=()
+md5sums=() #generate with 'makepkg -g'
+pa_ver=`(pkg-config --modversion libpulse 2>/dev/null || echo 0.0) | cut -f 1 -d "-"`
+
+build() {
+
+for source in Makefile appvm-scripts gui-common include pulse gui-agent common xf86-input-mfndev xf86-video-dummy window-icon-updater ; do
+  (ln -s $srcdir/../$source $srcdir/$source)
+done
+
+pa_ver=`(pkg-config --modversion libpulse 2>/dev/null || echo 0.0) | cut -f 1 -d "-"`
+
+rm -f pulse/pulsecore
+ln -s pulsecore-$pa_ver pulse/pulsecore
+
+# Bug fixes : /var/run/console depends on pam_console, which is fedora specific
+# As a consequece, /var/run/console does not exists and vanir-gui-agent will always fail
+sed 's:ExecStartPre=/bin/touch:#ExecStartPre=/bin/touch:' -i appvm-scripts/vanir-gui-agent.service
+# Ensure that vanir-gui-agent starts after user autologin
+sed 's/After=\(.*\)vanir-misc-post.service/After=\1qubes-misc-post.service getty.target/' -i appvm-scripts/vanir-gui-agent.service
+
+# Force running all scripts with python2
+export PYTHON=python2
+sed 's:#!/usr/bin/python:#!/usr/bin/python2:' -i appvm-scripts/usrbin/*
+sed 's:#!/usr/bin/env python:#!/usr/bin/env python2:' -i appvm-scripts/usrbin/*
+
+make appvm
+
+}
+
+package_qubes-vm-gui() {
+
+depends=('xorg-xinit' 'libxcomposite' 'zenity' 'vanir-libvchan-xen' 'python-xcffib'
+		'xorg-server>=1.20.3' 'xorg-server<1.20.4'
+		'vanir-vm-core>=3.0.14'
+		)
+install=PKGBUILD.install
+
+make install-rh-agent DESTDIR=$pkgdir LIBDIR=/usr/lib USRLIBDIR=/usr/lib SYSLIBDIR=/usr/lib
+
+# Specific to archlinux: vanir session needs to be the last started script when Xorg starts.
+# For Fedora Qubes devs team choosed to populate it in /etc/sysconfig/desktop, but this is not supported by Archlinux
+# Using z-vanir-session allows it to be the last started script in xinitrc.d...
+mkdir -p $pkgdir/etc/X11/xinit/xinitrc.d/
+install -D $srcdir/PKGBUILD-z-vanir-session.sh $pkgdir/etc/X11/xinit/xinitrc.d/z-vanir-session.sh
+
+}
+
+package_qubes-vm-pulseaudio() {
+
+pkgdesc="Pulseaudio support for Qubes VM"
+depends=( 'alsa-lib' 'alsa-utils' 'pulseaudio-alsa'
+		'pulseaudio>=12.0' 'pulseaudio<12.3'
+)
+install=PKGBUILD-pulseaudio.install
+pa_ver=`(pkg-config --modversion libpulse 2>/dev/null || echo 0.0) | cut -f 1 -d "-"`
+
+make install-pulseaudio DESTDIR=$pkgdir PA_VER=$pa_ver LIBDIR=/usr/lib USRLIBDIR=/usr/lib SYSLIBDIR=/usr/lib
+
+}
+
+# vim:set ts=2 sw=2 et:
+

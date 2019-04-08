@@ -1,0 +1,4 @@
+etc/pulse/vanir-default.pa
+etc/xdg/autostart/vanir-pulseaudio.desktop
+usr/bin/start-pulseaudio-with-vchan
+usr/lib/pulse-*/modules/module-vchan-sink.so

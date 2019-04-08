@@ -1,0 +1,21 @@
+[Unit]
+Description=Vanir GUI Agent
+After=vanir-meminfo-writer.service vanir-mount-dirs.service
+
+[Service]
+StandardInput=tty
+TTYPath=/dev/tty7
+# custom PATH for X session can be set with ENV_PATH; otherwise service's PATH
+# is inherited
+#Environment=ENV_PATH=/usr/local/bin:/usr/bin:/bin
+# pretend tha user is at local console
+ExecStartPre=/bin/mkdir -p /var/run/console ; /bin/touch /var/run/console/user
+ExecStart=/usr/bin/vanir-gui $GUI_OPTS
+# clean env
+ExecStopPost=/bin/rm -f /tmp/vanir-session-env /tmp/vanir-session-waiter
+StandardOutput=syslog
+Environment=DISPLAY=:0
+EnvironmentFile=-/var/run/vanir-service-environment
+
+[Install]
+WantedBy=multi-user.target

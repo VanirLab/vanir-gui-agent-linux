@@ -1,0 +1,85 @@
+#expects W, H, MEM and DEPTH env vars to be set by invoker
+DUMMY_MAX_CLOCK=300 #hardcoded in dummy_drv
+PREFERRED_HSYNC=50
+RES="$W"x"$H"
+HTOTAL=$(($W+3))
+VTOTAL=$(($H+3))
+CLOCK=$(($PREFERRED_HSYNC*$HTOTAL/1000))
+if [ $CLOCK -gt $DUMMY_MAX_CLOCK ] ; then CLOCK=$DUMMY_MAX_CLOCK ; fi
+MODELINE="$CLOCK $W $(($W+1)) $(($W+2)) $HTOTAL $H $(($H+1)) $(($H+2)) $VTOTAL"
+
+HSYNC_START=$(($CLOCK*1000/$HTOTAL))
+HSYNC_END=$((HSYNC_START+1))
+
+VREFR_START=$(($CLOCK*1000000/$HTOTAL/$VTOTAL))
+VREFR_END=$((VREFR_START+1))
+
+# Add extra memory to allow dynamic connection of extra monitor.
+# By default, have space for one FHD monitor, or multiple smaller.
+MEM_MIN="$(vanirdb-read /vanir-gui-videoram-min 2>/dev/null)"
+MEM_OVERHEAD="$(vanirdb-read /vanir-gui-videoram-overhead 2>/dev/null)"
+: ${MEM_MIN:=0}
+: ${MEM_OVERHEAD:=$((1920 * 1080 * 4 / 1024))}
+
+MEM=$(($MEM + $MEM_OVERHEAD))
+if [ $MEM -lt $MEM_MIN ]; then
+    MEM=$MEM_MIN
+fi
+
+sed -e  s/%MEM%/$MEM/ \
+        -e  s/%DEPTH%/$DEPTH/ \
+        -e  s/%MODELINE%/"$MODELINE"/ \
+        -e  s/%HSYNC_START%/"$HSYNC_START"/ \
+        -e  s/%HSYNC_END%/"$HSYNC_END"/ \
+        -e  s/%VREFR_START%/"$VREFR_START"/ \
+        -e  s/%VREFR_END%/"$VREFR_END"/ \
+        -e  s/%RES%/QB$RES/ \
+        -e  s/%GUI_DOMID%/"$GUI_DOMID"/ < /etc/X11/xorg-vanir.conf.template \
+        > /etc/X11/xorg-vanir.conf
+
+XSESSION="/etc/X11/xinit/xinitrc"
+XORG="/usr/bin/X"
+if [ -x /usr/libexec/Xorg ]; then
+    # bypass setuid-root wrapper, we don't need root here
+    XORG=/usr/libexec/Xorg
+fi
+if [ -f /etc/X11/Xsession ]; then
+    # Debian-based distro, set Xsession appropriately
+    XSESSION="/etc/X11/Xsession vanir-session"
+    # Debian installs Xorg without setuid root bit, with a setuid wrapper.
+    # The wrapper is not useful for vanir, but it does not matter since
+    # we can Xorg with vanir drivers without root. But we need to call
+    # Xorg directly, not X (which is the wrapper).
+    if [ -x /usr/lib/xorg/Xorg ]; then
+        XORG="/usr/lib/xorg/Xorg"
+    else
+        XORG="/usr/bin/Xorg"
+    fi
+fi
+
+export XDG_SEAT=seat0 XDG_SESSION_CLASS=user DISPLAY=:0
+
+# Defaults value in case default-user value is not available
+DEFAULT_USER="$(vanirdb-read /default-user 2>/dev/null)"
+if [ -z "$DEFAULT_USER" ];then
+    DEFAULT_USER="user"
+fi
+# Make vanir input socket readable by user in case Xorg is not running as
+# root (debian for example)
+chown "$DEFAULT_USER" /var/run/xf86-vanir-socket
+chmod 770 /var/run/xf86-vanir-socket
+
+# 2**30
+echo 1073741824 > /sys/module/xen_gntalloc/parameters/limit
+
+if [ -x /bin/loginctl ]; then
+    # logind needs at least one device with "master-of-seat" tag to
+    # consider this seat as graphical; we use pcspkr, for which we ship udev
+    # rules adding that tag
+    loginctl attach "$XDG_SEAT" /sys/devices/platform/pcspkr/input/*
+fi
+
+# Use sh -l here to load all session startup scripts (/etc/profile, ~/.profile
+# etc) to populate environment. This is the environment that will be used for
+# all user applications and qrexec calls.
+exec /usr/bin/vanir-gui-runuser "$DEFAULT_USER" /bin/sh -l -c "exec /usr/bin/xinit $XSESSION -- $XORG :0 -nolisten tcp vt07 -wr -config xorg-vanir.conf > ~/.xsession-errors 2>&1"

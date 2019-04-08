@@ -1,0 +1,53 @@
+loginctl activate "$XDG_SESSION_ID"
+
+# Set desktop background
+xsetroot -solid white
+
+rm -f /tmp/vanir-session-env
+
+export VANIR_ENV_SOURCED=1
+
+# Process XDG Autostart files
+shopt -s nullglob
+set -a
+
+# Get VM type from XenStore
+VMTYPE=`/usr/bin/vanirdb-read /vanir-vm-type`
+
+UPDTYPE=`/usr/bin/vanirdb-read /vanir-vm-updateable`
+[[ $UPDTYPE == 'True' ]] && UPDTYPE="UpdateableVM" || UPDTYPE="NonUpdateableVM"
+
+# process /etc/xdg/autostart and friends (according to Desktop Application
+# Autostart Specification)
+/usr/bin/vanir-session-autostart VANIR X-VANIR "X-$VMTYPE" "X-$UPDTYPE"
+
+if [ -f /etc/X11/xinit/xinitrc.d/vanir-keymap.sh ]; then
+	. /etc/X11/xinit/xinitrc.d/vanir-keymap.sh
+fi
+if [ -f /etc/X11/Xsession.d/90vanir-keymap ]; then
+	. /etc/X11/Xsession.d/90vanir-keymap
+fi
+
+# Save user environment
+(
+    umask 0077
+    unset PWD TERM SHELL RUNLEVEL PATH SHLVL LOGNAME USER MEM
+    export -p > /tmp/vanir-session-env.tmp
+)
+
+cd $HOME
+
+if [ -x /usr/bin/qrexec-fork-server ]; then
+    /usr/bin/qrexec-fork-server
+fi
+
+# Environment ready, make it available to processes
+mv /tmp/vanir-session-env.tmp /tmp/vanir-session-env
+
+# Wake waiting for environment processes
+[ -s /tmp/vanir-session-waiter ] && kill -KILL `cat /tmp/vanir-session-waiter`
+
+# Wait some time to pick up sleepwalkers
+wait
+
+env sleep inf

@@ -1,0 +1,4 @@
+# This is not meant to be executed
+pulseaudio-vanir: script-not-executable etc/pulse/vanir-default.pa
+# Pulseaudio config use #!/usr/bin/pulseaudio as a magic
+pulseaudio-vanir: unusual-interpreter etc/pulse/vanir-default.pa
