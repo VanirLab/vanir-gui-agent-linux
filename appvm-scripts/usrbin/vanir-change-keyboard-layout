@@ -115,7 +115,7 @@ else:
     zenity_cmd.append("FALSE")
 
 zenity_cmd.append("none")
-zenity_cmd.append("Qubes default layout")
+zenity_cmd.append("Vanir default layout")
 
 for l in layouts:
     if l[0] == cur_user_layout:
