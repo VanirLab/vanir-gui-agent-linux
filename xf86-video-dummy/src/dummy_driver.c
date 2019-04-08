@@ -789,20 +789,20 @@ DUMMYLoadPalette(
 
 }
 
-static struct xf86_qubes_pixmap *
-qubes_alloc_pixmap_private(size_t size) {
+static struct xf86_vanir_pixmap *
+vanir_alloc_pixmap_private(size_t size) {
     DUMMYPtr dPtr = DUMMYPTR(DUMMYScrn);
-    struct xf86_qubes_pixmap *priv;
+    struct xf86_vanir_pixmap *priv;
     size_t pages;
 
     pages = (size + XC_PAGE_SIZE - 1) >> XC_PAGE_SHIFT;
 
-    priv = calloc(1, sizeof(struct xf86_qubes_pixmap) + pages * sizeof(uint32_t));
+    priv = calloc(1, sizeof(struct xf86_vanir_pixmap) + pages * sizeof(uint32_t));
     if (priv == NULL)
         return NULL;
 
     priv->pages = pages;
-    priv->refs = (uint32_t *) (((uint8_t *) priv) + sizeof(struct xf86_qubes_pixmap));
+    priv->refs = (uint32_t *) (((uint8_t *) priv) + sizeof(struct xf86_vanir_pixmap));
 
     priv->data = xengntshr_share_pages(dPtr->xgs,
                                        dPtr->gui_domid,
@@ -820,13 +820,13 @@ qubes_alloc_pixmap_private(size_t size) {
 }
 
 static PixmapPtr
-qubes_create_pixmap(ScreenPtr pScreen, int width, int height, int depth,
+vanir_create_pixmap(ScreenPtr pScreen, int width, int height, int depth,
                     unsigned hint)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
     PixmapPtr pixmap;
-    struct xf86_qubes_pixmap *priv;
+    struct xf86_vanir_pixmap *priv;
     size_t bytes_per_line;
     size_t size;
 
@@ -840,10 +840,10 @@ qubes_create_pixmap(ScreenPtr pScreen, int width, int height, int depth,
     bytes_per_line = PixmapBytePad(width, depth);
     size = bytes_per_line * height;
 
-    priv = qubes_alloc_pixmap_private(size);
+    priv = vanir_alloc_pixmap_private(size);
     if (priv == NULL)
         goto err_destroy_pixmap;
-    xf86_qubes_pixmap_set_private(pixmap, priv);
+    xf86_vanir_pixmap_set_private(pixmap, priv);
 
     if (!pScreen->ModifyPixmapHeader(pixmap,
                                     width,
@@ -867,35 +867,35 @@ err_destroy_pixmap:
 }
 
 static Bool
-qubes_create_screen_resources(ScreenPtr pScreen) {
+vanir_create_screen_resources(ScreenPtr pScreen) {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     DUMMYPtr dPtr = DUMMYPTR(pScrn);
 
     Bool ret = dPtr->CreateScreenResources(pScreen);
 
     if (ret) {
-        xf86_qubes_pixmap_set_private(pScreen->GetScreenPixmap(pScreen),
+        xf86_vanir_pixmap_set_private(pScreen->GetScreenPixmap(pScreen),
                                       dPtr->FBBasePriv);
     }
 
     return ret;
 }
 
-static void qubes_free_pixmap_private(DUMMYPtr dPtr,
-                                      struct xf86_qubes_pixmap *priv) {
+static void vanir_free_pixmap_private(DUMMYPtr dPtr,
+                                      struct xf86_vanir_pixmap *priv) {
     xengntshr_unshare(dPtr->xgs, priv->data, priv->pages);
     // Also frees refs
     free(priv);
 }
 
 Bool
-qubes_destroy_pixmap(PixmapPtr pixmap) {
+vanir_destroy_pixmap(PixmapPtr pixmap) {
     DUMMYPtr dPtr = DUMMYPTR(DUMMYScrn);
-    struct xf86_qubes_pixmap *priv;
+    struct xf86_vanir_pixmap *priv;
 
     priv = xf86_qubes_pixmap_get_private(pixmap);
     if (priv != NULL && pixmap->refcnt == 1) {
-        qubes_free_pixmap_private(dPtr, priv);
+        vanir_free_pixmap_private(dPtr, priv);
     }
 
     return fbDestroyPixmap(pixmap);
@@ -910,7 +910,7 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
     int ret;
     VisualPtr visual;
 
-    if (!xf86_qubes_pixmap_register_private())
+    if (!xf86_vanir_pixmap_register_private())
         return FALSE;
 
     /*
@@ -927,7 +927,7 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
         return FALSE;
     }
 
-    dPtr->FBBasePriv = qubes_alloc_pixmap_private(pScrn->videoRam * 1024);
+    dPtr->FBBasePriv = vanir_alloc_pixmap_private(pScrn->videoRam * 1024);
     if (dPtr->FBBasePriv == NULL)
         return FALSE;
     dPtr->FBBase = (void *) dPtr->FBBasePriv->data;
@@ -981,10 +981,10 @@ DUMMYScreenInit(SCREEN_INIT_ARGS_DECL)
         }
     }
     
-    pScreen->CreatePixmap = qubes_create_pixmap;
-    pScreen->DestroyPixmap = qubes_destroy_pixmap;
+    pScreen->CreatePixmap = vanir_create_pixmap;
+    pScreen->DestroyPixmap = vanir_destroy_pixmap;
     dPtr->CreateScreenResources = pScreen->CreateScreenResources;
-    pScreen->CreateScreenResources = qubes_create_screen_resources;
+    pScreen->CreateScreenResources = vanir_create_screen_resources;
 
     /* must be after RGB ordering fixed */
     fbPictureInit(pScreen, 0, 0);
@@ -1156,7 +1156,7 @@ DUMMYCloseScreen(CLOSE_SCREEN_ARGS_DECL)
     if(pScrn->vtSema){
         dummyRestore(pScrn, TRUE);
         if (dPtr->FBBasePriv) {
-            qubes_free_pixmap_private(dPtr, dPtr->FBBasePriv);
+            vanir_free_pixmap_private(dPtr, dPtr->FBBasePriv);
             dPtr->FBBasePriv = NULL;
             dPtr->FBBase = NULL;
         }
