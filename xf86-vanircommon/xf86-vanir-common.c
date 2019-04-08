@@ -1,4 +1,4 @@
-#include "include/xf86-qubes-common.h"
+#include "include/xf86-vanir-common.h"
 
 static DevPrivateKeyRec xf86_vanir_pixmap_private_key;
 
