@@ -53,7 +53,7 @@ make appvm
 
 }
 
-package_qubes-vm-gui() {
+package_vanir-vm-gui() {
 
 depends=('xorg-xinit' 'libxcomposite' 'zenity' 'vanir-libvchan-xen' 'python-xcffib'
 		'xorg-server>=1.20.3' 'xorg-server<1.20.4'
@@ -64,7 +64,7 @@ install=PKGBUILD.install
 make install-rh-agent DESTDIR=$pkgdir LIBDIR=/usr/lib USRLIBDIR=/usr/lib SYSLIBDIR=/usr/lib
 
 # Specific to archlinux: vanir session needs to be the last started script when Xorg starts.
-# For Fedora Qubes devs team choosed to populate it in /etc/sysconfig/desktop, but this is not supported by Archlinux
+# For Fedora Vanir devs team choosed to populate it in /etc/sysconfig/desktop, but this is not supported by Archlinux
 # Using z-vanir-session allows it to be the last started script in xinitrc.d...
 mkdir -p $pkgdir/etc/X11/xinit/xinitrc.d/
 install -D $srcdir/PKGBUILD-z-vanir-session.sh $pkgdir/etc/X11/xinit/xinitrc.d/z-vanir-session.sh
