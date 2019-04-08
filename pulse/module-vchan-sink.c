@@ -99,7 +99,7 @@ static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state,
 	pa_log("sink cork req state =%d, now state=%d\n", new_state,
 			(int) (s->state));
 	if (s->state == PA_SINK_SUSPENDED && new_state != PA_SINK_SUSPENDED)
-		cmd = QUBES_PA_SINK_UNCORK_CMD;
+		cmd = VANIR_PA_SINK_UNCORK_CMD;
 	else if (s->state != PA_SINK_SUSPENDED && new_state == PA_SINK_SUSPENDED)
 		cmd = QUBES_PA_SINK_CORK_CMD;
 	if (cmd != 0) {
@@ -129,7 +129,7 @@ static int sink_process_msg(pa_msgobject * o, int code, void *data,
 			pa_log("sink cork req state =%d, now state=%d\n", state,
 			       (int) (u->sink->state));
 			if (u->sink->state == PA_SINK_SUSPENDED && state != PA_SINK_SUSPENDED)
-				cmd = QUBES_PA_SINK_UNCORK_CMD;
+				cmd = VANIR_PA_SINK_UNCORK_CMD;
 			else if (u->sink->state != PA_SINK_SUSPENDED && state == PA_SINK_SUSPENDED)
 				cmd = QUBES_PA_SINK_CORK_CMD;
 			if (cmd != 0) {
