@@ -2,4 +2,4 @@
 
 # Register already present XDG_SESSION_COOKIE in session bus
 
-[ -n "$XDG_SESSION_COOKIE" ] && ck-xinit-session-qubes /bin/true
+[ -n "$XDG_SESSION_COOKIE" ] && ck-xinit-session-vanir /bin/true
