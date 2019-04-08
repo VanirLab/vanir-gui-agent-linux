@@ -101,7 +101,7 @@ static int sink_set_state_in_io_thread_cb(pa_sink *s, pa_sink_state_t new_state,
 	if (s->state == PA_SINK_SUSPENDED && new_state != PA_SINK_SUSPENDED)
 		cmd = VANIR_PA_SINK_UNCORK_CMD;
 	else if (s->state != PA_SINK_SUSPENDED && new_state == PA_SINK_SUSPENDED)
-		cmd = QUBES_PA_SINK_CORK_CMD;
+		cmd = VANIR_PA_SINK_CORK_CMD;
 	if (cmd != 0) {
 		if (libvchan_send(u->rec_ctrl, (char*)&cmd, sizeof(cmd)) < 0) {
 			pa_log("vchan: failed to send sink cork cmd");
@@ -131,7 +131,7 @@ static int sink_process_msg(pa_msgobject * o, int code, void *data,
 			if (u->sink->state == PA_SINK_SUSPENDED && state != PA_SINK_SUSPENDED)
 				cmd = VANIR_PA_SINK_UNCORK_CMD;
 			else if (u->sink->state != PA_SINK_SUSPENDED && state == PA_SINK_SUSPENDED)
-				cmd = QUBES_PA_SINK_CORK_CMD;
+				cmd = VANIR_PA_SINK_CORK_CMD;
 			if (cmd != 0) {
 				if (libvchan_send(u->rec_ctrl, (char*)&cmd, sizeof(cmd)) < 0) {
 					pa_log("vchan: failed to send sink cork cmd");
