@@ -42,7 +42,7 @@ ln -s pulsecore-$pa_ver pulse/pulsecore
 # As a consequece, /var/run/console does not exists and vanir-gui-agent will always fail
 sed 's:ExecStartPre=/bin/touch:#ExecStartPre=/bin/touch:' -i appvm-scripts/vanir-gui-agent.service
 # Ensure that vanir-gui-agent starts after user autologin
-sed 's/After=\(.*\)vanir-misc-post.service/After=\1qubes-misc-post.service getty.target/' -i appvm-scripts/vanir-gui-agent.service
+sed 's/After=\(.*\)vanir-misc-post.service/After=\1vanir-misc-post.service getty.target/' -i appvm-scripts/vanir-gui-agent.service
 
 # Force running all scripts with python2
 export PYTHON=python2
@@ -71,9 +71,9 @@ install -D $srcdir/PKGBUILD-z-vanir-session.sh $pkgdir/etc/X11/xinit/xinitrc.d/z
 
 }
 
-package_qubes-vm-pulseaudio() {
+package_vanir-vm-pulseaudio() {
 
-pkgdesc="Pulseaudio support for Qubes VM"
+pkgdesc="Pulseaudio support for Vanir VM"
 depends=( 'alsa-lib' 'alsa-utils' 'pulseaudio-alsa'
 		'pulseaudio>=12.0' 'pulseaudio<12.3'
 )
