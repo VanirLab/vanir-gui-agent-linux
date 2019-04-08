@@ -893,7 +893,7 @@ vanir_destroy_pixmap(PixmapPtr pixmap) {
     DUMMYPtr dPtr = DUMMYPTR(DUMMYScrn);
     struct xf86_vanir_pixmap *priv;
 
-    priv = xf86_qubes_pixmap_get_private(pixmap);
+    priv = xf86_vanir_pixmap_get_private(pixmap);
     if (priv != NULL && pixmap->refcnt == 1) {
         vanir_free_pixmap_private(dPtr, priv);
     }
