@@ -1779,7 +1779,7 @@ void handle_clipboard_data(Ghandles * g, XID UNUSED(winid), unsigned int len)
 
     if (g->clipboard_data)
         free(g->clipboard_data);
-    // qubes_guid will not bother to send len==-1, really
+    // vanir_guid will not bother to send len==-1, really
     g->clipboard_data = malloc(len + 1);
     if (!g->clipboard_data) {
         perror("malloc");
