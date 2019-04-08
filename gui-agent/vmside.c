@@ -1192,7 +1192,7 @@ void wait_for_unix_socket(Ghandles *g)
     struct sockaddr_un sockname, peer;
     unsigned int addrlen;
     int prev_umask;
-    struct group *qubes_group;
+    struct group *vanir_group;
 
     /* setup listening socket only once; in case of vanir_drv reconnections,
      * simply pickup next waiting connection there (using accept below) */
@@ -1203,8 +1203,8 @@ void wait_for_unix_socket(Ghandles *g)
         sockname.sun_family = AF_UNIX;
         memcpy(sockname.sun_path, SOCKET_ADDRESS, strlen(SOCKET_ADDRESS));
 
-        qubes_group = getgrnam("vanir");
-        if (qubes_group)
+        vanir_group = getgrnam("vanir");
+        if (vanir_group)
             prev_umask=umask(0007);
         else
             prev_umask=umask(0000);
@@ -1214,8 +1214,8 @@ void wait_for_unix_socket(Ghandles *g)
             exit(1);
         }
         umask(prev_umask);
-        if (qubes_group) {
-            if (chown(SOCKET_ADDRESS, -1, qubes_group->gr_gid) == -1) {
+        if (vanir_group) {
+            if (chown(SOCKET_ADDRESS, -1, vanir_group->gr_gid) == -1) {
                 perror("chown");
                 if (chmod(SOCKET_ADDRESS, 0666) == -1)
                     perror("chmod"); // ignore error here
