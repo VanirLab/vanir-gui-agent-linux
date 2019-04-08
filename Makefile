@@ -90,7 +90,7 @@ install-xfce:
 install-debian: appvm install-common install-pulseaudio
 	install -d $(DESTDIR)/etc/X11/Xsession.d
 	install -m 0755 appvm-scripts/etc/X11/xinit/xinitrc.d/vanir-keymap.sh \
-		$(DESTDIR)/etc/X11/Xsession.d/90qubes-keymap
+		$(DESTDIR)/etc/X11/Xsession.d/90vanir-keymap
 	install -m 0644 appvm-scripts/etc/X11/Xsession.d/* $(DESTDIR)/etc/X11/Xsession.d/
 	install -d $(DESTDIR)/etc/xdg
 	install -m 0644 appvm-scripts/etc/xdg-debian/* $(DESTDIR)/etc/xdg
